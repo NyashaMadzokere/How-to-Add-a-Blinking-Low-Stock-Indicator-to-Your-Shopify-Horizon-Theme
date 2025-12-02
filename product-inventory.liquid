@@ -1,0 +1,113 @@
+## Complete Code
+
+Here's the full `product-inventory.liquid` file:
+
+```liquid
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  if variant.inventory_management == 'shopify'
+    assign inventory_managed = true
+  endif
+  assign inventory_quantity = variant.inventory_quantity
+  assign threshold = block.settings.inventory_threshold | default: 10
+  assign show_quantity = block.settings.show_inventory_quantity
+
+  if inventory_managed
+    if inventory_quantity > 0
+      if inventory_quantity <= threshold
+        assign status = 'low'
+      else
+        assign status = 'in_stock'
+      endif
+    else
+      assign status = 'out_of_stock'
+    endif
+  else
+    assign status = 'in_stock'
+  endif
+-%}
+
+<div class="product-inventory">
+  <span class="product-inventory__status">
+    <span class="product-inventory__icon product-inventory__icon-{{ status }}">●</span>
+    <span class="product-inventory__text">
+      {%- if status == 'low' and show_quantity -%}
+        Only {{ inventory_quantity }} left!
+      {%- elsif status == 'low' -%}
+        Low stock
+      {%- elsif status == 'in_stock' -%}
+        In stock
+      {%- else -%}
+        Out of stock
+      {%- endif -%}
+    </span>
+  </span>
+</div>
+
+{% stylesheet %}
+  .product-inventory__status {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .product-inventory__icon {
+    font-size: 10px;
+  }
+
+  .product-inventory__icon-in_stock {
+    color: #43a047;
+  }
+
+  .product-inventory__icon-low {
+    color: #e53935;
+    animation: blink-low-stock 1s ease-in-out infinite;
+  }
+
+  .product-inventory__icon-out_of_stock {
+    color: #757575;
+  }
+
+  @keyframes blink-low-stock {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.2;
+      transform: scale(1.2);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Product Inventory",
+  "settings": [
+    {
+      "type": "range",
+      "id": "inventory_threshold",
+      "label": "Low stock threshold",
+      "min": 1,
+      "max": 100,
+      "default": 10
+    },
+    {
+      "type": "checkbox",
+      "id": "show_inventory_quantity",
+      "label": "Show exact quantity",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Inventory"
+    }
+  ]
+}
+{% endschema %}
+```
+
+---
